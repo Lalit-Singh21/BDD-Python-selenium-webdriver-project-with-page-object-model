@@ -1,13 +1,25 @@
 Feature: Test that pages have correct content
+
+  @dockertest
+    Scenario: Google search
+    Given I am on google page
+    Then Title is shown on the page
+    Then I quit the driver
+
+
+  @BlogPageTitle
   Scenario: Blog page has a correct title
     Given I am on the blogpage
     Then There is a title shown on the page
     And The title tag has content "This is the blog page"
+    Then I quit the driver
 
+  @HomePageTitle
   Scenario: Homepage has a correct title
     Given I am on the homepage
     Then There is a title shown on the page
     And The title tag has content "This is the homepage"
+    Then I quit the driver
 
    Scenario: Blog page loads the posts
     Given I am on the blogpage
