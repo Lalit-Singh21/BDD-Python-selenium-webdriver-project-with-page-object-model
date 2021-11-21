@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-# A customized test runner for behave BDD test automation to run on different browsers on docker
-#################################################################################################
+# A customized test runner for behave BDD test automation to
+# run parallel on different browsers versions on docker containers
+####################################################################
 
+import multiprocessing
 import os
 import argparse
 from argparse import RawTextHelpFormatter
 import subprocess as sp
-from multiprocessing import Process
-
-
-def worker_scenario(scenario_names, feature_files, output, browser_name):
-    """Runs a given scenario a single time"""
+from multiprocessing import Process, pool
+import time
+browser_dict = {'c': 'chrome', 'f': 'firefox', 'o': 'opera'}
+t = time.time()
+def get_behave_command(scenario_names, feature_files, output, browser_name):
+    """Returns a command line string for behave """
     cmd = ["behave.exe"]
-    # print(f"feature file, {type(feature_files)}---{feature_files}")
-    # print(f"scenario_names file, {type(scenario_names)}---{scenario_names}")
-    browser_dict = {'c': 'chrome', 'f': 'firefox', 'o': 'opera'}
     if feature_files is not None:
         for i in range(len(feature_files)):
             cmd = cmd + [feature_files[i]]
@@ -27,46 +27,33 @@ def worker_scenario(scenario_names, feature_files, output, browser_name):
         cmd = cmd + ["-o"] + [output]
     if browser_name is not None:
         cmd += ['--define']+[browser_dict[browser_name]]
-    print("cmd:::", cmd)
+    return cmd # ("cmd:::", cmd)
+
+def run_cli(cmd):
     sp.call(cmd)
-    print("\n\n\n")
 
-
-def runner_scenario_x_times(repetitions, scenario_names, feature_files, out):
+def parallel_runner(repetitions, scenario_names, feature_files, out):
     """
-    Runs 'repetitions' are browser numbers combination to cover given behave scenarios, features, or
-    the whole testsuite.
-
-    :param repetitions: (int) number of times that a given test scenario,
-                        feature file, or whole test suite, shall be run on given browser
-    :param scenario_names: (seq) list of scenario names to be run a given
-                           'repetitions' times
-    :param feature_files: (seq) list of feature-files to be run a given
-                          'repetitions' times
+    :param repetitions: dict input is browser name with number of instances
+    :param scenario_names: (seq) list of scenario names to be run for number of times for specific browsers
+    :param feature_files: (seq) list of feature-files to be run
     """
-    if scenario_names is not None:
-        to_test = scenario_names
-    elif feature_files is not None:
-        to_test = feature_files
-    else:
-        to_test = "tests" #folder for all tests
-    # browser_dict = dict()
+    dict_repetitions = dict()
     if repetitions is not None:
-        browser_dict = eval(repetitions)
-    msg = ("\nRunning " + str(repetitions) + " times test(s):\n " 
-           + str(to_test) + "\n")
-    print(msg)
+        dict_repetitions = eval(repetitions)
     if out:
         out_name = os.path.splitext(out)[0]
         ext = os.path.splitext(out)[1]
+    list_of_process = []
+    for browser in dict_repetitions.keys():
+        for i in range(int(dict_repetitions[browser])):
+            list_of_process.append(get_behave_command(scenario_names, feature_files,out, browser))
+    # print(list_of_process)
+    # *(10) number of sessions (MAX_SESSIONS: browser sessions to run at same time in docker hub)
+    p = multiprocessing.Pool(10)
+    p.map(run_cli, list_of_process)
 
-    for browser in browser_dict.keys():
-        for i in range(int(browser_dict[browser])):
-            print (f"Iteration number:  {str(i+1)} for browser - {browser}")
-            p = Process(target=worker_scenario,
-                            args=(scenario_names, feature_files,out, browser))
-            p.start()
-            p.join()
+
 
 def main():
 
@@ -94,11 +81,12 @@ def main():
 
     args = parser.parse_args()
 
-    runner_scenario_x_times(args.repeat_browser_type,
+    parallel_runner(args.repeat_browser_type,
                             args.scenario_names,
                             args.feature_files,
                             args.output)
 
+    print("time taken: ", time.time()-t)
 
 if __name__ == "__main__":
     main()
