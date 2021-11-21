@@ -1,14 +1,12 @@
 #!/usr/bin/env python
-# A customized test runner for behave BDD test automation to
-# run parallel on different browsers versions on docker containers
+# A customized test runner for behave BDD tests to run parallelely
+# on different browser versions on number of docker containers
 ####################################################################
-
-import multiprocessing
 import os
 import argparse
 from argparse import RawTextHelpFormatter
 import subprocess as sp
-from multiprocessing import Process, pool
+from multiprocessing import pool
 import time
 browser_dict = {'c': 'chrome', 'f': 'firefox', 'o': 'opera'}
 t = time.time()
@@ -60,7 +58,6 @@ def main():
     parser = argparse.ArgumentParser(
                  description="Test Runner allowing to run n test scenarios",
                  formatter_class=RawTextHelpFormatter)
-
     parser.add_argument(
         "-b", "--repeat_browser_type", type=str, default='{c:1}',
         help="provide the browser type to run test in docker multiple times, {c:2, f:3, o:3} means" \
@@ -78,9 +75,7 @@ def main():
         "-o", "--output", type=str, default=None,
         help="Write output on specified file instead of stdout\n"
              + "(default=None)")
-
     args = parser.parse_args()
-
     parallel_runner(args.repeat_browser_type,
                             args.scenario_names,
                             args.feature_files,
