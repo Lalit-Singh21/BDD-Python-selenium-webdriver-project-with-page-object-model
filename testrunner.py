@@ -6,6 +6,7 @@ import os
 import argparse
 from argparse import RawTextHelpFormatter
 import subprocess as sp
+import multiprocessing
 from multiprocessing import pool
 import time
 browser_dict = {'c': 'chrome', 'f': 'firefox', 'o': 'opera'}
