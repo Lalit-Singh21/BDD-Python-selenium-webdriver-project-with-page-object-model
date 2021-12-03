@@ -12,6 +12,7 @@ class BasePage:
 
     @staticmethod
     def browser():
+        options = webdriver.ChromeOptions()
         browser_string = sys.argv[-1].strip().lower()
         if browser_string == 'firefox':
             options = webdriver.FirefoxOptions()
